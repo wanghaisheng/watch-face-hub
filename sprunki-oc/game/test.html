@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>自定义角色生成器</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .container {
+            background-color: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            max-width: 400px;
+            width: 100%;
+        }
+
+        #character {
+            width: 300px;
+            height: 300px;
+            position: relative;
+            margin: 0 auto;
+            background-color: #e0e0e0;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        #character img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .controls {
+            margin-top: 20px;
+            width: 300px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .category-buttons {
+            display: flex;
+            overflow-x: auto;
+            white-space: nowrap;
+            margin-bottom: 10px;
+            padding-bottom: 5px;
+        }
+
+        .category-button {
+            padding: 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-right: 5px;
+            flex: 0 0 auto;
+        }
+
+        .visual-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+            justify-content: flex-start;
+            align-content: flex-start;
+            max-height: 200px;
+            overflow-y: auto;
+            padding-right: 5px;
+            width: 300px;
+            min-height: 200px;
+        }
+
+        .visual-item {
+            width: 60px;
+            height: 60px;
+            border: 2px solid #ccc;
+            border-radius: 5px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: border-color 0.3s;
+            flex: 0 0 auto;
+            align-content: center;
+            text-align: center;
+        }
+
+        .visual-item.selected {
+            border-color: #4CAF50;
+        }
+
+        .visual-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        #exportBtn {
+            display: block;
+            width: 300px;
+            padding: 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 20px auto 0;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>自定义角色生成器</h1>
+
+        <div id="character">
+            <img id="body" src="./img/body/download-1.png" alt="身体">
+            <img id="head" src="./img/head/download-1.png" alt="头部">
+            <img id="eyes" src="" alt="眼睛" style="display: none;">
+            <img id="mouth" src="" alt="嘴巴" style="display: none;">
+            <img id="hair" src="" alt="头发" style="display: none;">
+            <img id="headgear" src="" alt="头饰" style="display: none;">
+        </div>
+
+        <div class="controls">
+            <div class="category-buttons">
+                <button class="category-button" data-category="body">身体</button>
+                <button class="category-button" data-category="head">头部</button>
+                <button class="category-button" data-category="eyes">眼睛</button>
+                <button class="category-button" data-category="mouth">嘴巴</button>
+                <button class="category-button" data-category="hair">头发</button>
+                <button class="category-button" data-category="headgear">头饰</button>
+            </div>
+            <div id="visualList" class="visual-list"></div>
+        </div>
+
+        <button id="exportBtn">导出角色</button>
+    </div>
+
+    <script>
+        const parts = ['body', 'head', 'eyes', 'mouth', 'hair', 'headgear'];
+        const partCounts = {
+            'body': 18,
+            'head': 18,
+            'eyes': 6,
+            'mouth': 7,
+            'hair': 13,
+            'headgear': 5
+        };
+        let currentCategory = 'body';
+
+        function createVisualList(category) {
+            const list = document.getElementById('visualList');
+            list.innerHTML = '';
+
+            // 添加空选项
+            const emptyItem = document.createElement('div');
+            emptyItem.className = 'visual-item';
+            emptyItem.dataset.value = '';
+            emptyItem.innerHTML = '<span>无</span>';
+            list.appendChild(emptyItem);
+
+            for (let i = 1; i <= partCounts[category]; i++) {
+                const item = document.createElement('div');
+                item.className = 'visual-item';
+                item.dataset.value = `./img/${category}/download-${i}.png`;
+                item.innerHTML = `<img src="./img/${category}/download-${i}.png" alt="${category}${i}">`;
+                list.appendChild(item);
+            }
+
+            // 设置默认选中项
+            const selectedValue = document.getElementById(category).src;
+            const selectedItem = list.querySelector(`[data-value="${selectedValue}"]`) || list.children[0];
+            selectedItem.classList.add('selected');
+        }
+
+        function updateCharacter() {
+            parts.forEach(part => {
+                const img = document.getElementById(part);
+                const selectedItem = document.querySelector(`#visualList .selected`);
+                if (selectedItem && selectedItem.dataset.value && part === currentCategory) {
+                    img.src = selectedItem.dataset.value;
+                    img.style.display = 'block';
+                } else if (!selectedItem.dataset.value && part === currentCategory) {
+                    img.style.display = 'none';
+                }
+            });
+        }
+
+        document.querySelector('.category-buttons').addEventListener('click', (e) => {
+            if (e.target.classList.contains('category-button')) {
+                currentCategory = e.target.dataset.category;
+                createVisualList(currentCategory);
+            }
+        });
+
+        document.getElementById('visualList').addEventListener('click', (e) => {
+            const clickedItem = e.target.closest('.visual-item');
+            if (clickedItem) {
+                document.querySelectorAll('#visualList .visual-item').forEach(item => item.classList.remove('selected'));
+                clickedItem.classList.add('selected');
+                updateCharacter();
+            }
+        });
+
+        document.getElementById('exportBtn').addEventListener('click', () => {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = 300;
+            canvas.height = 300;
+            
+            parts.forEach(part => {
+                const img = document.getElementById(part);
+                if (img.style.display !== 'none') {
+                    ctx.drawImage(img, 0, 0, 300, 300);
+                }
+            });
+            const link = document.createElement('a');
+            link.href = canvas.toDataURL();
+            link.download = '角色.png';
+            link.click();
+        });
+
+        createVisualList('body'); // 初始化显示身体选项
+        updateCharacter(); // 初始化角色显示
+    </script>
+</body>
+
+</html>
